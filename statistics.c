@@ -56,11 +56,11 @@ static enum State state;
 static const struct entry Iptab[] =
 {   /* Keep the entries sorted! */
     {"DefaultTTL", N_("Default TTL is %llu"), number | I_STATIC},
-    {"Forwarding", N_("Forwarding is %s"), i_forward | I_STATIC},
     {"ForwDatagrams", N_("%llu forwarded"), number},
+    {"Forwarding", N_("Forwarding is %s"), i_forward | I_STATIC},
     {"FragCreates", N_("%llu fragments created"), opt_number},
-    {"FragFails", N_("%llu fragments failed"), opt_number},
-    {"FragOKs", N_("%llu fragments received ok"), opt_number},
+    {"FragFails", N_("%llu outgoing packets failed fragmentation"), opt_number},
+    {"FragOKs", N_("%llu outgoing packets fragmented ok"), opt_number},
     {"InAddrErrors", N_("%llu with invalid addresses"), opt_number},
     {"InDelivers", N_("%llu incoming packets delivered"), number},
     {"InDiscards", N_("%llu incoming packets discarded"), number},
@@ -79,8 +79,8 @@ static const struct entry Iptab[] =
 static const struct entry Ip6tab[] =
 {   /* Keep the entries sorted! */
     {"Ip6FragCreates", N_("%llu fragments created"), opt_number},
-    {"Ip6FragFails", N_("%llu fragments failed"), opt_number},
-    {"Ip6FragOKs", N_("%llu fragments received ok"), opt_number},
+    {"Ip6FragFails", N_("%llu outgoing packets failed fragmentation"), opt_number},
+    {"Ip6FragOKs", N_("%llu outgoing packets fragmented ok"), opt_number},
     {"Ip6InAddrErrors", N_("%llu with invalid addresses"), opt_number},
     {"Ip6InDelivers", N_("%llu incoming packets delivered"), number},
     {"Ip6InDiscards", N_("%llu incoming packets discarded"), number},
@@ -187,6 +187,7 @@ static const struct entry Tcptab[] =
 
 static const struct entry Udptab[] =
 {   /* Keep the entries sorted! */
+    {"InCsumErrors", N_("%llu packets with invalid checksum"), number},
     {"InDatagrams", N_("%llu packets received"), number},
     {"InErrors", N_("%llu packet receive errors"), number},
     {"NoPorts", N_("%llu packets to unknown port received"), number},
@@ -197,10 +198,13 @@ static const struct entry Udptab[] =
 
 static const struct entry Udp6tab[] =
 {   /* Keep the entries sorted! */
+    {"Udp6InCsumErrors", N_("%llu packets with invalid checksum"), number},
     {"Udp6InDatagrams", N_("%llu packets received"), number},
     {"Udp6InErrors", N_("%llu packet receive errors"), number},
     {"Udp6NoPorts", N_("%llu packets to unknown port received"), number},
     {"Udp6OutDatagrams", N_("%llu packets sent"), number},
+    {"Udp6RcvbufErrors", N_("%llu receive buffer errors"), number},
+    {"Udp6SndbufErrors", N_("%llu send buffer errors"), number},
 };
 
 static const struct entry Tcpexttab[] =
@@ -215,7 +219,7 @@ static const struct entry Tcpexttab[] =
     {"OfoPruned", N_("%llu packets dropped from out-of-order queue because of socket buffer overrun"), opt_number},
     {"OutOfWindowIcmps", N_("%llu ICMP packets dropped because they were out-of-window"), opt_number},
     {"PAWSActive", N_("%llu active connections rejected because of time stamp"), opt_number},
-    {"PAWSEstab", N_("%llu packetes rejected in established connections because of timestamp"), opt_number},
+    {"PAWSEstab", N_("%llu packets rejected in established connections because of timestamp"), opt_number},
     {"PAWSPassive", N_("%llu passive connections rejected because of time stamp"), opt_number},
     {"PruneCalled", N_("%llu packets pruned from receive queue because of socket buffer overrun"), opt_number},
     {"RcvPruned", N_("%llu packets pruned from receive queue"), opt_number},

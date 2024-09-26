@@ -60,18 +60,12 @@ static char *Release = RELEASE;
 static char *program_name;
 static int opt_v;
 
-static void sethname(char *);
-static void setdname(char *);
-static void showhname(char *, int);
-static void version(void);
-static void setfilename(char *, int);
-
 #define SETHOST		1
 #define SETDOMAIN	2
 #define SETNODE		3
 
 #if HAVE_AFDECnet
-static void setnname(char *nname)
+static void setnname(const char *nname)
 {
     if (opt_v)
         fprintf(stderr, _("Setting nodename to `%s'\n"),
@@ -85,6 +79,7 @@ static void setnname(char *nname)
             fprintf(stderr, _("%s: name too long\n"), program_name);
             break;
         default:
+	    perror(program_name);
 	    break;
         }
 	exit(1);
@@ -92,7 +87,7 @@ static void setnname(char *nname)
 }
 #endif /* HAVE_AFDECnet */
 
-static void sethname(char *hname)
+static void sethname(const char *hname)
 {
     if (opt_v)
 	fprintf(stderr, _("Setting hostname to `%s'\n"),
@@ -105,12 +100,15 @@ static void sethname(char *hname)
 	case EINVAL:
 	    fprintf(stderr, _("%s: name too long\n"), program_name);
 	    break;
+	default:
+	    perror(program_name);
+	    break;
 	}
 	exit(1);
-    };
+    }
 }
 
-static void setdname(char *dname)
+static void setdname(const char *dname)
 {
     if (opt_v)
 	fprintf(stderr, _("Setting domainname to `%s'\n"),
@@ -123,15 +121,18 @@ static void setdname(char *dname)
 	case EINVAL:
 	    fprintf(stderr, _("%s: name too long\n"), program_name);
 	    break;
+	default:
+	    perror(program_name);
+	    break;
 	}
 	exit(1);
-    };
+    }
 }
 
-static void showhname(char *hname, int c)
+static void showhname(const char *hname, int c)
 {
     struct hostent *hp;
-    register char *p, **alias;
+    char *p, **alias;
 #if HAVE_AFINET6
     char addr[INET6_ADDRSTRLEN + 1];
 #else
@@ -215,10 +216,10 @@ static void showhname(char *hname, int c)
     }
 }
 
-static void setfilename(char *name, int what)
+static void setfilename(const char *name, int what)
 {
-    register FILE *fd;
-    register char *p;
+    FILE *fd;
+    char *p;
     char fline[MAXHOSTNAMELEN];
 
     if ((fd = fopen(name, "r")) != NULL) {

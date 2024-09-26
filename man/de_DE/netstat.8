@@ -75,7 +75,7 @@ zeigt Informationen des Linux-Netzwerkssystems an.
 .SS "(no option)"
 Ohne Optionen zeigt
 .B netstat
-den Zustand von offenen Sockets an.  Wird keine Adressfamilie angegeben, dann
+den Zustand von offenen Sockets an. Wird keine Adressfamilie angegeben, dann
 werden die offenen Sockets aller konfigurierten Adressfamilien angezeigt.
 Die Option
 .B -e
@@ -109,8 +109,9 @@ F\(:ur Details siehe
 .SS "\-i, \-\-interfaces"
 Wird die
 .BR -i ", " --interfaces
-Option verwendet,  so wird eine Tabelle aller Schnittstellen
-ausgegeben.  Die Ausgabe ist im Format von
+Option verwendet, so wird eine Tabelle aller Schnittstellen
+ausgegeben sowie deren Fehlerquoten beim Senden und Empfangen.
+Die Ausgabe ist im Format von
 .B "ifconfig -e"
 und wird in
 .BR ifconfig (8)
@@ -133,10 +134,7 @@ Schalter schlie\(sst zus\(:atzlich Informationen \(:uber Sequenznummern und
 Deltas, die durch das Umschreiben von FTP-Sitzungen (PORT Kommando) verursacht
 werden, ein.  Maskieren wird verwendet, um Maschinen mit inoffiziellen
 Netzwerkssitzungen vor der Au\(ssenwelt zu verstecken.  Dies wird in
-.BR ipfw (4),
-.BR ipfwadm (8)
-und
-.BR ipfw (8)
+.BR iptables (8)
 beschrieben.
 
 .SS "\-N, \-\-netlink"
@@ -159,7 +157,8 @@ Rechner-, Port- oder Benutzernamen aus.
 
 .SS "\-p, \-\-programs"
 Zeigt den Prozessnamen und die PID des Eigent\(:umers des Sockets, der
-ausgegeben wird.  Nur der Eigent\(:umer eines Prozess oder
+ausgegeben wird oder ein Divis, falls der Socket dem Kernel geh\(:ort.
+Nur der Eigent\(:umer eines Prozess oder
 .B Root
 haben alle dazu n\(:otigen Privilegien.
 
@@ -237,12 +236,12 @@ Eine Verbindungsanfrage wurde von der Gegenseite empfangen.
 .TP
 .I
 FIN_WAIT1
-Der Socket wurde geschlo\(ssen und die Verbindung wird beendet.
+Der Socket wurde geschlossen und die Verbindung wird beendet.
 .TP
 .I
 FIN_WAIT2
-Die Verbindung ist geschl\(ssen und der Socket wartet darauf, da\(ss sie
-von der Gegenseite ebenfalls geschlo\(ssen wird.
+Die Verbindung ist geschlossen und der Socket wartet darauf, dass sie
+von der Gegenseite ebenfalls geschlossen wird.
 .TP
 .I
 TIME_WAIT
@@ -260,7 +259,7 @@ wird erwartet.
 .TP
 .I
 LAST_ACK
-Die Gegenseite hat die Verbindung beendet und der Socket ist geschlo\(ssen;
+Die Gegenseite hat die Verbindung beendet und der Socket ist geschlossen;
 die Best\(:atigung wird abgewartet.
 .TP
 .I
@@ -272,7 +271,7 @@ Option gew\(:ahlt wird.
 .TP
 .I
 CLOSING
-Beide Sockets sind geschlo\(ssen, es wurden aber noch nicht alle Daten
+Beide Sockets sind geschlossen, es wurden aber noch nicht alle Daten
 geschickt.
 .TP
 .I
@@ -292,7 +291,7 @@ Privilegien ben\(:otigt um die n\(:otigen Daten zu erhalten.  F\(:ur IPX
 Sockets sind diese Daten nicht verf\(:ugbar.
 
 .SS "Timer"
-(dies mu\(ss noch geschrieben werden)
+(dies muss noch geschrieben werden)
 
 .PP
 .SS aktive Sockets in der UNIX Dom\(:ane
@@ -332,7 +331,7 @@ Der Socket wird als RAW-Socket verwendet.
 .TP
 .I
 SOCK_RDM
-Dieser Socket bedient zuverl\(ssig zugestellte Nachrichten.
+Dieser Socket bedient zuverl\(:assig zugestellte Nachrichten.
 .TP
 .I
 SOCK_SEQPACKET
@@ -345,7 +344,7 @@ Socket mit direktem (RAW) Zugriff auf die Schnittstelle.
 .TP
 .I
 UNKNOWN
-Wer wei\(ss, was uns die Zukunft bringt soll es hier hinschreiben :-)
+Wer wei\(ss, was uns die Zukunft bringt, soll es hier hinschreiben :-)
 
 .PP
 .SS "Zustand"
@@ -474,9 +473,12 @@ Befehl explizite Regeln zugef\(:ugt werden.
 
 .PP
 .SH SIEHE AUCH
-.BR route (8), 
-.BR ifconfig (8), 
-.BR iptables (8)
+.BR route (8),
+.BR ifconfig (8),
+.BR iptables (8),
+.BR proc (5),
+.BR ss (8),
+.BR ip (8)
 
 .PP
 .SH PROBLEME

@@ -109,7 +109,7 @@ static struct interface *if_cache_add(const char *name)
 	    if (n < 0)
 		    break;
     }
-    new(new);
+    new = xmalloc(sizeof(*new));
     safe_strncpy(new->name, name, IFNAMSIZ);
     nextp = ife ? &ife->next : &int_list; // keep sorting
     new->prev = ife;
@@ -254,7 +254,7 @@ static int get_dev_fields(const char *bp, struct interface *ife)
     switch (procnetdev_vsn) {
     case 3:
 	sscanf(bp,
-	"%Lu %Lu %lu %lu %lu %lu %lu %lu %Lu %Lu %lu %lu %lu %lu %lu %lu",
+	"%llu %llu %lu %lu %lu %lu %lu %lu %llu %llu %lu %lu %lu %lu %lu %lu",
 	       &ife->stats.rx_bytes,
 	       &ife->stats.rx_packets,
 	       &ife->stats.rx_errors,
@@ -274,7 +274,7 @@ static int get_dev_fields(const char *bp, struct interface *ife)
 	       &ife->stats.tx_compressed);
 	break;
     case 2:
-	sscanf(bp, "%Lu %Lu %lu %lu %lu %lu %Lu %Lu %lu %lu %lu %lu %lu",
+	sscanf(bp, "%llu %llu %lu %lu %lu %lu %llu %llu %lu %lu %lu %lu %lu",
 	       &ife->stats.rx_bytes,
 	       &ife->stats.rx_packets,
 	       &ife->stats.rx_errors,
@@ -292,7 +292,7 @@ static int get_dev_fields(const char *bp, struct interface *ife)
 	ife->stats.rx_multicast = 0;
 	break;
     case 1:
-	sscanf(bp, "%Lu %lu %lu %lu %lu %Lu %lu %lu %lu %lu %lu",
+	sscanf(bp, "%llu %lu %lu %lu %lu %llu %lu %lu %lu %lu %lu",
 	       &ife->stats.rx_packets,
 	       &ife->stats.rx_errors,
 	       &ife->stats.rx_dropped,
@@ -594,12 +594,12 @@ int do_if_print(struct interface *ife, void *cookie)
 
 void ife_print_short(struct interface *ptr)
 {
-    printf("%-8.8s ", ptr->name);
+    printf("%-15.15s ", ptr->name);
     printf("%5d ", ptr->mtu);
     /* If needed, display the interface statistics. */
     if (ptr->statistics_valid) {
 	printf("%8llu %6lu %6lu %-6lu ",
-	       ptr->stats.rx_packets, ptr->stats.rx_errors,
+	       ptr->stats.rx_packets, ptr->stats.rx_errors + ptr->stats.rx_crc_errors + ptr->stats.rx_frame_errors,
 	       ptr->stats.rx_dropped, ptr->stats.rx_fifo_errors);
 	printf("%8llu %6lu %6lu %6lu ",
 	       ptr->stats.tx_packets, ptr->stats.tx_errors,
@@ -631,7 +631,7 @@ void ife_print_short(struct interface *ptr)
     if (ptr->flags & IFF_NOARP)
 	printf("O");
     if (ptr->flags & IFF_POINTOPOINT)
-	printf("P");
+	printf("p");
     if (ptr->flags & IFF_SLAVE)
 	printf("s");
     if (ptr->flags & IFF_MASTER)
@@ -644,6 +644,33 @@ void ife_print_short(struct interface *ptr)
     printf("\n");
 }
 
+/* Turn numeric value into human readable units. */
+static void ife_unit(unsigned long long value, char **text, unsigned long long *short_val)
+{
+    *text = "B";
+    *short_val = value * 10;
+
+    if (value > 1152921504606846976ull) {
+	*short_val = value / 115292150460684697ull;
+	*text = "EiB";
+    } else if (value > 1125899906842624ull) {
+	*short_val /= 1125899906842624ull;
+	*text = "PiB";
+    } else if (value > 1099511627776ull) {
+	*short_val /= 1099511627776ull;
+	*text = "TiB";
+    } else if (value > 1073741824ull) {
+	*short_val /= 1073741824ull;
+	*text = "GiB";
+    } else if (value > 1048576) {
+	*short_val /= 1048576;
+	*text = "MiB";
+    } else if (value > 1024) {
+	*short_val /= 1024;
+	*text = "KiB";
+    }
+}
+
 void ife_print_long(struct interface *ptr)
 {
     const struct aftype *ap;
@@ -651,8 +678,7 @@ void ife_print_long(struct interface *ptr)
     int hf;
     int can_compress = 0;
     unsigned long long rx, tx, short_rx, short_tx;
-    const char *Rext = "B";
-    const char *Text = "B";
+    char *Rext, *Text;
     static char flags[200];
 
 #if HAVE_AFIPX
@@ -865,47 +891,10 @@ void ife_print_long(struct interface *ptr)
 	 *      by all addresses.
 	 */
 	rx = ptr->stats.rx_bytes;
-	short_rx = rx * 10;
-	if (rx > 1125899906842624ull) {
-	    if (rx > (9223372036854775807ull / 10))
-		short_rx = rx / 112589990684262ull;
-	    else
-		short_rx /= 1125899906842624ull;
-	    Rext = "PiB";
-	} else if (rx > 1099511627776ull) {
-	    short_rx /= 1099511627776ull;
-	    Rext = "TiB";
-	} else if (rx > 1073741824ull) {
-	    short_rx /= 1073741824ull;
-	    Rext = "GiB";
-	} else if (rx > 1048576) {
-	    short_rx /= 1048576;
-	    Rext = "MiB";
-	} else if (rx > 1024) {
-	    short_rx /= 1024;
-	    Rext = "KiB";
-	}
+	ife_unit(rx, &Rext, &short_rx);
+
 	tx = ptr->stats.tx_bytes;
-	short_tx = tx * 10;
-	if (tx > 1125899906842624ull) {
-	    if (tx > (9223372036854775807ull / 10))
-		short_tx = tx / 112589990684262ull;
-	    else
-		short_tx /= 1125899906842624ull;
-	    Text = "PiB";
-	} else 	if (tx > 1099511627776ull) {
-	    short_tx /= 1099511627776ull;
-	    Text = "TiB";
-	} else if (tx > 1073741824ull) {
-	    short_tx /= 1073741824ull;
-	    Text = "GiB";
-	} else if (tx > 1048576) {
-	    short_tx /= 1048576;
-	    Text = "MiB";
-	} else if (tx > 1024) {
-	    short_tx /= 1024;
-	    Text = "KiB";
-	}
+	ife_unit(tx, &Text, &short_tx);
 
 	printf("        ");
 	printf(_("RX packets %llu  bytes %llu (%lu.%lu %s)\n"),

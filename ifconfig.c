@@ -218,6 +218,9 @@ static void usage(int rc)
 #ifdef HAVE_TXQUEUELEN
     fprintf(fp, _("  [txqueuelen <NN>]\n"));
 #endif
+#ifdef SIOCSIFNAME
+    fprintf(fp, _("  [name <newname>]\n"));
+#endif
 #ifdef HAVE_DYNAMIC
     fprintf(fp, _("  [[-]dynamic]\n"));
 #endif
@@ -593,6 +596,20 @@ int main(int argc, char **argv)
 	}
 #endif
 
+#ifdef SIOCSIFNAME
+	if (!strcmp(*spp, "name")) {
+	    if (*++spp == NULL)
+		usage(E_OPTERR);
+	    safe_strncpy(ifr.ifr_newname, *spp, IFNAMSIZ);
+	    if (ioctl(skfd, SIOCSIFNAME, &ifr) < 0) {
+		fprintf(stderr, "SIOCSIFNAME: %s\n", strerror(errno));
+		goterr = 1;
+	    }
+	    spp++;
+	    continue;
+	}
+#endif
+
 	if (!strcmp(*spp, "mem_start")) {
 	    if (*++spp == NULL)
 		usage(E_OPTERR);
@@ -644,14 +661,14 @@ int main(int argc, char **argv)
 	    spp++;
 	    continue;
 	}
-	if (!strcmp(*spp, "-pointopoint")) {
+	if (!strcmp(*spp, "-pointopoint") || !strcmp(*spp, "-pointtopoint")) {
 	    goterr |= clr_flag(ifr.ifr_name, IFF_POINTOPOINT);
 	    spp++;
 	    if (test_flag(ifr.ifr_name, IFF_POINTOPOINT) > 0)
 	    	fprintf(stderr, _("Warning: Interface %s still in POINTOPOINT mode.\n"), ifr.ifr_name);
 	    continue;
 	}
-	if (!strcmp(*spp, "pointopoint")) {
+	if (!strcmp(*spp, "pointopoint") || !strcmp(*spp, "pointtopoint")) {
 	    if (*(spp + 1) != NULL) {
 		spp++;
 		safe_strncpy(host, *spp, (sizeof host));
@@ -968,8 +985,9 @@ int main(int argc, char **argv)
 	    if (ap->herror)
 	    	ap->herror(host);
 	    else
-	    	fprintf(stderr,_("ifconfig: error resolving '%s' to set address for af=%s\n"), host, ap->name); fprintf(stderr,
-	    _("ifconfig: `--help' gives usage information.\n")); exit(1);
+	    	fprintf(stderr,_("ifconfig: error resolving '%s' to set address for af=%s\n"), host, ap->name);
+	    fprintf(stderr, _("ifconfig: `--help' gives usage information.\n"));
+	    exit(1);
 	}
 	memcpy(&ifr.ifr_addr, sa, sizeof(struct sockaddr));
 	{
